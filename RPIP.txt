@@ -1,0 +1,78 @@
+import machine
+import ssd1306
+import time
+import random
+
+# Configuración de la pantalla OLED
+i2c = machine.I2C(1, scl=machine.Pin(27), sda=machine.Pin(26), freq=400000)
+oled = ssd1306.SSD1306_I2C(128, 32, i2c)
+
+
+
+# Definir las coordenadas de la barra
+bar_x = 0  # Coordenada X de la esquina superior izquierda de la primera barra
+bar_y = 10  # Coordenada Y de la esquina superior izquierda de la barra
+bar_width = 50  # Ancho de la barra horizontal
+bar_height = 10  # Altura de la barra horizontal
+
+# Función para generar un valor aleatorio de RPM
+def get_random_rpm():
+    return random.randint(0, 8000)  # Puedes ajustar este rango según tus necesidades
+
+# Función para determinar la dirección de la flecha
+def get_arrow_direction(rpm):
+    if rpm % 2 == 0:
+        return 'frente'
+    elif rpm % 3 == 0:
+        return 'izquierda'
+    elif rpm % 5 == 0:
+        return 'derecha'
+    else:
+        return 'frente'  # Por defecto, la flecha apuntará hacia adelante
+
+# Función para dibujar el tacómetro en la pantalla OLED
+def draw_tachometer(rpm):
+    oled.fill(0)
+    # Dibujar la primera barra horizontal
+    bar_value = int((rpm / 8000) * bar_width)
+    oled.rect(bar_x, bar_y, bar_width, bar_height, 1)
+    oled.fill_rect(bar_x, bar_y, bar_value, bar_height, 1)
+    # Dibujar la segunda barra horizontal
+    bar_value2 = int((rpm / 8000) * bar_width)
+    oled.rect(bar_x + 75, bar_y, bar_width, bar_height, 1)
+    oled.fill_rect(bar_x + 75 + (bar_width - bar_value2), bar_y, bar_value2, bar_height, 1)  # Reflejo inverso
+    # Mostrar el valor del RPM
+    oled.text("V1", 0, 0)
+    oled.text(str(rpm), 0, 25)
+    # Mostrar el valor del RPM en la segunda mitad
+    oled.text("V2", 110, 0)
+    oled.text(str(rpm), 95, 25)
+    # Determinar la dirección de la flecha
+    arrow_direction = get_arrow_direction(rpm)
+    # Dibujar flecha en la mitad de la pantalla
+    arrow_length = 12  # Longitud de la flecha
+    arrow_x = 63  # Coordenada X del centro de la flecha
+    arrow_y = 28  # Coordenada Y del centro de la flecha
+    if arrow_direction == 'frente':
+        oled.line(arrow_x, arrow_y + arrow_length, arrow_x, arrow_y - arrow_length, 1)  # Línea vertical de la flecha
+        oled.line(arrow_x, arrow_y - arrow_length, arrow_x - 4, arrow_y - arrow_length + 4, 1)  # Línea izquierda de la flecha
+        oled.line(arrow_x, arrow_y - arrow_length, arrow_x + 4, arrow_y - arrow_length + 4, 1)  # Línea derecha de la flecha
+    elif arrow_direction == 'derecha':
+        oled.line(arrow_x - arrow_length, arrow_y, arrow_x + arrow_length, arrow_y, 1)  # Línea horizontal de la flecha
+        oled.line(arrow_x + arrow_length, arrow_y, arrow_x + arrow_length - 4, arrow_y - 4, 1)  # Línea superior de la flecha
+        oled.line(arrow_x + arrow_length, arrow_y, arrow_x + arrow_length - 4, arrow_y + 4, 1)  # Línea inferior de la flecha
+    elif arrow_direction == 'izquierda':
+        oled.line(arrow_x + arrow_length, arrow_y, arrow_x - arrow_length, arrow_y, 1)  # Línea horizontal de la flecha
+        oled.line(arrow_x - arrow_length, arrow_y, arrow_x - arrow_length + 4, arrow_y - 4, 1)  # Línea superior de la flecha
+        oled.line(arrow_x - arrow_length, arrow_y, arrow_x - arrow_length + 4, arrow_y + 4, 1)  # Línea inferior de la flecha
+    oled.show()
+
+try:
+    while True:
+        rpm = get_random_rpm()
+        draw_tachometer(rpm)
+        # Actualizar cada segundo, puedes ajustar esto según tu preferencia
+        time.sleep(1)
+except KeyboardInterrupt:
+    pass
+

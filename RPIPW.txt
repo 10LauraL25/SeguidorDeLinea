@@ -1,0 +1,81 @@
+﻿import sys
+import time
+import pwmio
+import digitalio
+import busio
+import board
+#import adafruit_ssd1306
+
+pin_pwm = board.GP16
+pwm1= pwmio.PWMOut(pin_pwm , frequency=2000)
+
+pin_pwm2 = board.GP17
+pwm2 = pwmio.PWMOut(pin_pwm2, frequency=2000)
+
+pin_pwmDer = board.GP27
+pwmDer=pwm1 #pwmio.PWMOut(pin_pwmDer, frequency=2000)
+
+pin_pwmIzq = board.GP26
+pwmDer=pwm2
+
+pin_pwmInf = board.GP28
+pwmInf=pwmio.PWMOut(pin_pwmInf, frequency=2000)
+# Configuración de la pantalla OLED
+#i2c = busio.I2C(board.GP19, board.GP18)
+#oled = adafruit_ssd1306.SSD1306_I2C(128, 32, i2c)
+
+# Función para mostrar el mensaje en la pantalla OLED
+#def mostrar_mensaje(mensaje):
+    #global oled
+    #oled.fill(0)
+    #oled.text(mensaje, 0, 0, 1)
+    #oled.show()
+
+from adafruit_ov7670 import (  # pylint: disable=unused-import
+    OV7670,
+    OV7670_SIZE_DIV16,
+    OV7670_COLOR_YUV,
+    OV7670_TEST_PATTERN_COLOR_BAR_FADE,
+)
+
+
+cam_bus = busio.I2C(board.GP21, board.GP20)
+
+cam = OV7670(
+    cam_bus,
+    data_pins=[
+        board.GP0,
+        board.GP1,
+        board.GP2,
+        board.GP3,
+        board.GP4,
+        board.GP5,
+        board.GP6,
+        board.GP7,
+    ],
+    clock=board.GP8,
+    vsync=board.GP13,
+    href=board.GP12,
+    mclk=board.GP9,
+    shutdown=board.GP15,
+    reset=board.GP14,
+)
+
+cam.size = OV7670_SIZE_DIV16
+cam.colorspace = OV7670_COLOR_YUV
+cam.flip_y = True
+
+#print(cam.width, cam.height)##40*30
+
+# Dimensiones de la imagen
+width = cam.width
+height = cam.height
+
+# Buffer para almacenar píxeles
+pixels = bytearray(2 * width * height)
+
+rect1 = 0
+centro = 0
+abajo = 0
+curvDer=0
+curvDerC=0
